@@ -62,8 +62,12 @@ const extractDslUrl= (htmlUrl: string): Promise<string>  => new Promise((resolve
       const result = (data as string)?.match(/\<script src="([^"]+)"\>\<\/script\>\<\/body\>/mg);
       if (result?.length) {
         const dslName = result[0].replace(/^.+src="([^"]+)".+$/, '$1').replace(/\.js$/, '.dsl.json');
-        const separation = /\/$/.test(htmlUrl) ? '' : '/';
-        resolve(`${htmlUrl}${separation}${dslName}`);
+        if (/^http(s?):\/\/|^\/\//.test(dslName)) {
+          resolve(dslName);
+        } else {
+          const separation = /\/$/.test(htmlUrl) ? '' : '/';
+          resolve(`${htmlUrl}${separation}${dslName}`);
+        }
       } else {
         reject(new Error('获取 dsl 地址失败！'));
       }
