@@ -88,18 +88,22 @@ const dslLoad = (params: DslLoadParams) => {
 
   if(!memoCache[url]) {
     memoCache[url] = new Promise(async (resolve, reject) => {
-      const dslUrl = fromHtml ? await extractDslUrl(url) : url;
-      wx.request({
-        url: dslUrl,
-        method: 'GET',
-        dataType: 'json',
-        success({ data }) {
-          resolve(data);
-        },
-        fail(err) {
-          reject(err);
-        }
-      });
+      try {
+        const dslUrl = fromHtml ? await extractDslUrl(url) : url;
+        wx.request({
+          url: dslUrl,
+          method: 'GET',
+          dataType: 'json',
+          success({ data }) {
+            resolve(data);
+          },
+          fail(err) {
+            reject(err);
+          }
+        });
+      } catch (err) {
+        reject(err);
+      }
     });
   }
   if (watch) {
