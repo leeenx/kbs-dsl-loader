@@ -6,12 +6,6 @@ interface WatchOptions {
   update?: (json: any) => void;
 };
 
-interface DslLoadParams {
-  url: string;
-  fromHtml?: boolean;
-  watch?: boolean;
-  watchOptions?: WatchOptions;
-};
 
 // 内存级缓存
 const memoCache: Record<string, Promise<any> | undefined> = {};
@@ -53,7 +47,7 @@ const createWebsocketTask = (url: string) => {
 };
 
 // 从 html 中提取 dsl 地址
-const extractDslUrl= (htmlUrl: string): Promise<string>  => new Promise((resolve, reject) => {
+export const fromHtml= (htmlUrl: string): Promise<string>  => new Promise((resolve, reject) => {
   wx.request({
     url: htmlUrl,
     method: 'GET',
@@ -78,20 +72,19 @@ const extractDslUrl= (htmlUrl: string): Promise<string>  => new Promise((resolve
   });
 });
 
-const dslLoad = (params: DslLoadParams) => {
-  const {
-    url,
-    watch = false,
-    watchOptions,
-    fromHtml = false
-  } = params;
-
-  if(!memoCache[url]) {
-    memoCache[url] = new Promise(async (resolve, reject) => {
+// 加载 dsl
+const load = async (rawUrl: string | Promise<string>) => {
+  let url: string = '';
+  if (typeof rawUrl !== 'string') {
+    url = await rawUrl;
+  } else {
+    url = rawUrl;
+  }
+  if (!memoCache[url]) {
+    memoCache[url] = new Promise((resolve, reject) => {
       try {
-        const dslUrl = fromHtml ? await extractDslUrl(url) : url;
         wx.request({
-          url: dslUrl,
+          url,
           method: 'GET',
           dataType: 'json',
           success({ data }) {
@@ -106,19 +99,23 @@ const dslLoad = (params: DslLoadParams) => {
       }
     });
   }
-  if (watch) {
-    // 需要监听文件变化
-    const wsOptions: WatchOptions = Object.assign({}, defaultWatchOptions, watchOptions || {});
-    const {
-      protocol,
-      host,
-      port,
-      update
-    } = wsOptions;
-    let { entry } = wsOptions
-    if (!entry) {
-      entry = url.replace(/.+\/([^\/]+)/, '$1');
-    }
+  return memoCache[url];
+};
+
+// 监听文件（用于开发阶段）
+export const watch = (watchOptions: WatchOptions) => {
+  // 需要监听文件变化
+  const wsOptions: WatchOptions = Object.assign({}, defaultWatchOptions, watchOptions || {});
+  const {
+    protocol,
+    host,
+    port,
+    entry,
+    update
+  } = wsOptions;
+  if (!entry) {
+    console.warn('watchOptions 缺少关键参数 entry。PS: 通常是被下载的 url 的根目录');
+  } else {
     const task = createWebsocketTask(`${protocol}://${host}:${port}`);
     if (task) {
       task.onMessage(({ data }) => {
@@ -129,6 +126,6 @@ const dslLoad = (params: DslLoadParams) => {
       });
     }
   }
-  return memoCache[url];
 };
-export default dslLoad;
+
+export default load;
