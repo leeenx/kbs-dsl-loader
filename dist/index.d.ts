@@ -7,7 +7,7 @@ interface WatchOptions {
 }
 
 declare module 'kbs-dsl-loader' {
-  export default function(url: string | Promise<string>, saveToStrorage: boolean): Promise<any> | undefined;
+  export default function(url: string | Promise<string>, saveToStrorage?: boolean): Promise<any> | undefined;
   export function fromHtml(url: string): Promise<string>;
   export function watch(watchOptions: WatchOptions): void;
 }
