@@ -72,8 +72,11 @@ export const fromHtml= (htmlUrl: string): Promise<string>  => new Promise((resol
   });
 });
 
-// 加载 dsl
-const load = async (rawUrl: string | Promise<string>) => {
+/**
+ * 加载 dsl
+ * 第二个参数表示缓存到 storage，需要谨慎使用
+ */
+const load = async (rawUrl: string | Promise<string>, saveToStrorage: boolean) => {
   let url: string = '';
   if (typeof rawUrl !== 'string') {
     url = await rawUrl;
@@ -81,23 +84,41 @@ const load = async (rawUrl: string | Promise<string>) => {
     url = rawUrl;
   }
   if (!memoCache[url]) {
-    memoCache[url] = new Promise((resolve, reject) => {
-      try {
-        wx.request({
-          url,
-          method: 'GET',
-          dataType: 'json',
-          success({ data }) {
-            resolve(data);
-          },
-          fail(err) {
-            reject(err);
-          }
-        });
-      } catch (err) {
-        reject(err);
-      }
-    });
+    // 先从 storage 上找
+    let storageData: any;
+    try {
+      storageData = wx.getStorageSync(url);
+    } catch {
+      console.warn('getStorageSync 失败：', url);
+    }
+    if (storageData) {
+      memoCache[url] = storageData;
+    } else {
+      memoCache[url] = new Promise((resolve, reject) => {
+        try {
+          wx.request({
+            url,
+            method: 'GET',
+            dataType: 'json',
+            success({ data }) {
+              if (saveToStrorage) {
+                try {
+                  wx.setStorage({ key: url, data });
+                } catch {
+                  console.warn('setStorage 失败：', { key: url, data });
+                }
+              }
+              resolve(data);
+            },
+            fail(err) {
+              reject(err);
+            }
+          });
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
   }
   return memoCache[url];
 };
