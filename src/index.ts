@@ -53,15 +53,10 @@ export const fromHtml= (htmlUrl: string): Promise<string>  => new Promise((resol
     method: 'GET',
     dataType: '其他',
     success({ data }) {
-      const result = (data as string)?.match(/\<script src="([^"]+)"\>\<\/script\>\<\/body\>/mg);
+      const result = (data as string)?.match(/mp-web-package-url="([^"]+)"/mg);
       if (result?.length) {
-        const dslName = result[0].replace(/^.+src="([^"]+)".+$/, '$1').replace(/\.js$/, '.dsl.json');
-        if (/^http(s?):\/\/|^\/\//.test(dslName)) {
-          resolve(dslName);
-        } else {
-          const separation = /\/$/.test(htmlUrl) ? '' : '/';
-          resolve(`${htmlUrl}${separation}${dslName}`);
-        }
+        console.log('======= result', result);
+        resolve(result[0].replace(/mp-web-package-url="([^"]+)"/g, '$1'));
       } else {
         reject(new Error('获取 dsl 地址失败！'));
       }
@@ -102,11 +97,13 @@ const load = async (rawUrl: string | Promise<string>, saveToStrorage: boolean) =
             dataType: 'json',
             success({ data }) {
               if (saveToStrorage) {
-                try {
-                  wx.setStorage({ key: url, data });
-                } catch {
-                  console.warn('setStorage 失败：', { key: url, data });
-                }
+                wx.setStorage({
+                  key: url,
+                  data,
+                  fail(err) {
+                    console.warn('setStorage 失败：', { key: url, data, err });
+                  }
+                });
               }
               resolve(data);
             },
