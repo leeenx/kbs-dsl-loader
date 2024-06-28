@@ -46,25 +46,33 @@ const createWebsocketTask = (url: string) => {
   return connectSocketTaskMap[url];
 };
 
+const fromHtmlCache: Record<string, Promise<string>> = {};
+
 // 从 html 中提取 dsl 地址
-export const fromHtml= (htmlUrl: string): Promise<string>  => new Promise((resolve, reject) => {
-  wx.request({
-    url: htmlUrl,
-    method: 'GET',
-    dataType: '其他',
-    success({ data }) {
-      const result = (data as string)?.match(/mp-web-package-url="([^"]+)"/mg);
-      if (result?.length) {
-        resolve(result[0].replace(/mp-web-package-url="([^"]+)"/g, '$1'));
-      } else {
-        reject(new Error('获取 dsl 地址失败！'));
-      }
-    },
-    fail(err) {
-      reject(err);
-    }
-  });
-});
+export const fromHtml= (htmlUrl: string): Promise<string>  => {
+  if (!fromHtmlCache[htmlUrl]) {
+    fromHtmlCache[htmlUrl] = new Promise((resolve, reject) => {
+      wx.request({
+        url: htmlUrl,
+        method: 'GET',
+        dataType: '其他',
+        success({ data }) {
+          const result = (data as string)?.match(/mp-web-package-url="([^"]+)"/mg);
+          if (result?.length) {
+            resolve(result[0].replace(/mp-web-package-url="([^"]+)"/g, '$1'));
+          } else {
+            reject(new Error('获取 dsl 地址失败！'));
+          }
+        },
+        fail(err) {
+          reject(err);
+          delete fromHtmlCache[htmlUrl];
+        }
+      });
+    });
+  }
+  return fromHtmlCache[htmlUrl];
+};
 
 /**
  * 加载 dsl
