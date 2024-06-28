@@ -55,7 +55,6 @@ export const fromHtml= (htmlUrl: string): Promise<string>  => new Promise((resol
     success({ data }) {
       const result = (data as string)?.match(/mp-web-package-url="([^"]+)"/mg);
       if (result?.length) {
-        console.log('======= result', result);
         resolve(result[0].replace(/mp-web-package-url="([^"]+)"/g, '$1'));
       } else {
         reject(new Error('获取 dsl 地址失败！'));
