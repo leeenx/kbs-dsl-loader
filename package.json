@@ -1,6 +1,6 @@
 {
   "name": "kbs-dsl-loader",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "kbs-dsl 的加载器。",
   "main": "./dist/index.js",
   "scripts": {

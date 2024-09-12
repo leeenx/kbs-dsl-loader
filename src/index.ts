@@ -78,7 +78,7 @@ export const fromHtml= (htmlUrl: string): Promise<string>  => {
  * 加载 dsl
  * 第二个参数表示缓存到 storage，需要谨慎使用
  */
-const load = async (rawUrl: string | Promise<string>, saveToStrorage: boolean) => {
+const load = async (rawUrl: string | Promise<string>, saveToStrorage: boolean, storageName?: string) => {
   let url: string = '';
   if (typeof rawUrl !== 'string') {
     url = await rawUrl;
@@ -97,22 +97,23 @@ const load = async (rawUrl: string | Promise<string>, saveToStrorage: boolean) =
       memoCache[url] = storageData;
     } else {
       memoCache[url] = new Promise((resolve, reject) => {
+        const storageKey = storageName || url;
         try {
           wx.request({
             url,
             method: 'GET',
             dataType: 'json',
             success({ data }) {
+              resolve(data);
               if (saveToStrorage) {
                 wx.setStorage({
-                  key: url,
+                  key: storageKey,
                   data,
                   fail(err) {
-                    console.warn('setStorage 失败：', { key: url, data, err });
+                    console.warn('setStorage 失败：', { key: storageKey, url, data, err });
                   }
                 });
               }
-              resolve(data);
             },
             fail(err) {
               reject(err);
