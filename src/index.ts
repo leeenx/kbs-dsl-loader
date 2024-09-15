@@ -56,7 +56,17 @@ export const fromHtml= (htmlUrl: string): Promise<string>  => {
         success({ data }) {
           const result = (data as string)?.match(/mp-web-package-url="([^"]+)"/mg);
           if (result?.length) {
-            resolve(result[0].replace(/mp-web-package-url="([^"]+)"/g, '$1'));
+            let dslJsonUrl = result[0].replace(/mp-web-package-url="([^"]+)"/g, '$1');
+            if (/^\/\//.test(dslJsonUrl)) {
+              // 缺少协议头
+              dslJsonUrl = `https:${dslJsonUrl}`;
+            } else if (!/^https:/.test(dslJsonUrl)) {
+              // 缺少域名，表示与 htmlUrl 同域名
+              const host = htmlUrl.replace(/http(s?)\:\/\//, '').split(/\//)[0];
+              const protocol = htmlUrl.split('://')[0];
+              dslJsonUrl = `${[protocol]}://${host}${dslJsonUrl}`;
+            }
+            resolve(dslJsonUrl);
           } else {
             reject(new Error('获取 dsl 地址失败！'));
           }
