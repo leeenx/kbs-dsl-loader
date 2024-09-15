@@ -60,7 +60,7 @@ export const fromHtml= (htmlUrl: string): Promise<string>  => {
             if (/^\/\//.test(dslJsonUrl)) {
               // 缺少协议头
               dslJsonUrl = `https:${dslJsonUrl}`;
-            } else if (!/^https:/.test(dslJsonUrl)) {
+            } else if (!/^http(s?):/.test(dslJsonUrl)) {
               // 缺少域名，表示与 htmlUrl 同域名
               const host = htmlUrl.replace(/http(s?)\:\/\//, '').split(/\//)[0];
               const protocol = htmlUrl.split('://')[0];
