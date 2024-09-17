@@ -9,6 +9,13 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.wasm'],
   },
+  externals: {
+    'kbs-dsl-resolver': {
+      commonjs: 'kbs-dsl-resolver',
+      commonjs2: 'kbs-dsl-resolver',
+      var: 'KbsDslResolver'
+    }
+  },
   module: {
     rules: [
       {
