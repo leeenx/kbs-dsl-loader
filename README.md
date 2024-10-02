@@ -1,6 +1,6 @@
 # 简介
 
-用于加载 dsl 的工具。目前主要加载 [kbs-dsl-maker](https://github.com/leeenx/kbs-dsl-maker) 产生的结果。
+加载器。。
 
 # 用法
 
